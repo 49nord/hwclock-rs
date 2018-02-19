@@ -29,7 +29,7 @@ ioctl!(write_ptr rtc_set_time with 'p', 0x0a; RtcTime);
 /// Conversion from and to `chrono::NaiveDateTime` is supported, Any resolution
 /// beyond seconds will silently be discarded without rounding.
 #[repr(C)]
-#[derive(Debug, Copy, Clone, Default)]
+#[derive(Debug, Copy, Clone, Default, Eq, PartialEq)]
 pub struct RtcTime {
     /// Seconds
     pub tm_sec: c_int,
@@ -37,17 +37,17 @@ pub struct RtcTime {
     pub tm_min: c_int,
     /// Hours
     pub tm_hour: c_int,
-    /// Day of the month, first day is 0
+    /// Day of the month (1-31)
     pub tm_mday: c_int,
-    /// Month of the year, first month (January) is 0
+    /// Months since January (0-11)
     pub tm_mon: c_int,
-    /// Year, starting at 118
+    /// Years since `YEAR_EPOCH` (1900)
     pub tm_year: c_int,
-    /// unused
+    /// unused, should be set to 0
     pub tm_wday: c_int,
-    /// unused
+    /// unused, should be set to 0
     pub tm_yday: c_int,
-    /// unused
+    /// unused, should be set to 0
     pub tm_isdst: c_int,
 }
 
@@ -56,7 +56,7 @@ impl From<RtcTime> for chrono::NaiveDateTime {
         let d = chrono::NaiveDate::from_ymd(
             rtc.tm_year as i32 + YEAR_EPOCH,
             (rtc.tm_mon + 1) as u32,
-            (rtc.tm_mday + 1) as u32,
+            rtc.tm_mday as u32,
         );
         let t =
             chrono::NaiveTime::from_hms(rtc.tm_hour as u32, rtc.tm_min as u32, rtc.tm_sec as u32);
@@ -70,7 +70,7 @@ impl From<chrono::NaiveDateTime> for RtcTime {
             tm_sec: ct.time().second() as i32,
             tm_min: ct.time().minute() as i32,
             tm_hour: ct.time().hour() as i32,
-            tm_mday: ct.date().day0() as i32,
+            tm_mday: ct.date().day() as i32,
             tm_mon: ct.date().month0() as i32,
             tm_year: ct.date().year() - YEAR_EPOCH,
 
@@ -79,18 +79,53 @@ impl From<chrono::NaiveDateTime> for RtcTime {
     }
 }
 
-#[test]
-fn bindgen_test_layout_rtc_time() {
-    assert_eq!(
-        ::std::mem::size_of::<RtcTime>(),
-        36usize,
-        concat!("Size of: ", stringify!(RtcTime))
-    );
-    assert_eq!(
-        ::std::mem::align_of::<RtcTime>(),
-        4usize,
-        concat!("Alignment of ", stringify!(RtcTime))
-    );
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn conversion_from_rtctime() {
+        // Mon Feb 19 15:06:01 CET 2018
+        // == Mon Feb 19 14:06:01 UTC 2018
+
+        let rtc = RtcTime {
+            tm_sec: 1,
+            tm_min: 6,
+            tm_hour: 14,
+            tm_mday: 19,
+            tm_mon: 1,
+            tm_year: 118,
+            tm_wday: 0,
+            tm_yday: 0,
+            tm_isdst: 0,
+        };
+
+        let ct = chrono::NaiveDateTime::new(
+            chrono::NaiveDate::from_ymd(2018, 2, 19),
+            chrono::NaiveTime::from_hms(14, 6, 1),
+        );
+
+        let rtc_from_ct: RtcTime = ct.into();
+        let ct_from_rtc: chrono::NaiveDateTime = rtc.into();
+
+        assert_eq!(rtc, rtc_from_ct);
+        assert_eq!(ct, ct_from_rtc);
+    }
+
+    #[test]
+    fn bindgen_test_layout_rtc_time() {
+        assert_eq!(
+            ::std::mem::size_of::<RtcTime>(),
+            36usize,
+            concat!("Size of: ", stringify!(RtcTime))
+        );
+        assert_eq!(
+            ::std::mem::align_of::<RtcTime>(),
+            4usize,
+            concat!("Alignment of ", stringify!(RtcTime))
+        );
+    }
+
 }
 
 fn main() {
