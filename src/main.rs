@@ -6,7 +6,7 @@ extern crate nix;
 use chrono::{Datelike, Timelike};
 
 use libc::c_int;
-use std::fs;
+use std::{fs, io, path};
 use std::os::unix::io::AsRawFd;
 
 /// Basic epoch for dates.
@@ -126,7 +126,39 @@ mod tests {
             concat!("Alignment of ", stringify!(RtcTime))
         );
     }
+}
 
+#[derive(Debug)]
+pub struct HwClockDev {
+    // we store a full file instead of the raw fd, allowing us to print the
+    // name of the clock using the derived debug impl
+    clk: fs::File,
+}
+
+impl HwClockDev {
+    pub fn open<P: AsRef<path::Path>>(dev: P) -> io::Result<HwClockDev> {
+        Ok(HwClockDev {
+            clk: fs::File::open(dev)?,
+        })
+    }
+
+    pub fn get_time(&self) -> Result<RtcTime, nix::Error> {
+        let mut time = RtcTime::default();
+
+        assert_eq!(0, unsafe {
+            rtc_rd_time(self.clk.as_raw_fd(), &mut time as *mut RtcTime)
+        }?);
+
+        Ok(time)
+    }
+
+    pub fn set_time(&self, time: &RtcTime) -> Result<(), nix::Error> {
+        assert_eq!(0, unsafe {
+            rtc_set_time(self.clk.as_raw_fd(), time as *const RtcTime)
+        }?);
+
+        Ok(())
+    }
 }
 
 fn main() {
