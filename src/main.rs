@@ -8,7 +8,12 @@ use libc::c_int;
 use std::fs;
 use std::os::unix::io::AsRawFd;
 
-const YEAR_EPOCH: i32 = 1900;
+/// Basic epoch for dates.
+///
+/// All dates returned by the hardware clock are in offset of the epoch year,
+/// which usually is 1900 (e.g. a value of `118` on `RtcTime::tm_year`
+/// marks the year 2018).
+pub const YEAR_EPOCH: i32 = 1900;
 
 // ioctls, stolen from linux/rtc.h
 ioctl!(read rtc_rd_time with 'p', 0x09; RtcTime);
@@ -20,6 +25,9 @@ ioctl!(write_ptr rtc_set_time with 'p', 0x0a; RtcTime);
 /// It is assumed that the Rtc is kept at UTC.
 ///
 /// Note that the resolution of the time struct is only seconds.
+///
+/// Conversion from and to `chrono::NaiveDateTime` is supported, Any resolution
+/// beyond seconds will silently be discarded without rounding.
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Default)]
 pub struct RtcTime {
