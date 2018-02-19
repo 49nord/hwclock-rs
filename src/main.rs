@@ -2,6 +2,7 @@ extern crate chrono;
 extern crate libc;
 #[macro_use]
 extern crate nix;
+
 use chrono::{Datelike, Timelike};
 
 use libc::c_int;
@@ -58,71 +59,9 @@ impl From<RtcTime> for chrono::NaiveDateTime {
             (rtc.tm_mon + 1) as u32,
             rtc.tm_mday as u32,
         );
-        let t = chrono::NaiveTime::from_hms(rtc.hour(), rtc.minute(), rtc.second());
+        let t =
+            chrono::NaiveTime::from_hms(rtc.tm_hour as u32, rtc.tm_min as u32, rtc.tm_sec as u32);
         chrono::NaiveDateTime::new(d, t)
-    }
-}
-
-impl Timelike for RtcTime {
-    #[inline]
-    fn second(&self) -> u32 {
-        self.tm_sec as u32
-    }
-
-    #[inline]
-    fn minute(&self) -> u32 {
-        self.tm_min as u32
-    }
-
-    #[inline]
-    fn hour(&self) -> u32 {
-        self.tm_hour as u32
-    }
-
-    #[inline]
-    fn nanosecond(&self) -> u32 {
-        0
-    }
-
-    #[inline]
-    fn with_hour(&self, hour: u32) -> Option<Self> {
-        if hour < 24 {
-            Some(RtcTime {
-                tm_hour: hour as i32,
-                ..*self
-            })
-        } else {
-            None
-        }
-    }
-
-    #[inline]
-    fn with_minute(&self, minute: u32) -> Option<Self> {
-        if minute < 60 {
-            Some(RtcTime {
-                tm_min: minute as i32,
-                ..*self
-            })
-        } else {
-            None
-        }
-    }
-
-    #[inline]
-    fn with_second(&self, second: u32) -> Option<Self> {
-        if second < 60 {
-            Some(RtcTime {
-                tm_sec: second as i32,
-                ..*self
-            })
-        } else {
-            None
-        }
-    }
-
-    #[inline]
-    fn with_nanosecond(&self, _: u32) -> Option<Self> {
-        Some(self.clone())
     }
 }
 
