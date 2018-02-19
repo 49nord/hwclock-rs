@@ -2,8 +2,13 @@ extern crate chrono;
 extern crate libc;
 #[macro_use]
 extern crate nix;
+use chrono::{Datelike, Timelike};
 
 use libc::c_int;
+use std::fs;
+use std::os::unix::io::AsRawFd;
+
+const YEAR_EPOCH: i32 = 1900;
 
 // ioctls, stolen from linux/rtc.h
 ioctl!(read rtc_rd_time with 'p', 0x09; RtcTime);
@@ -41,13 +46,28 @@ pub struct RtcTime {
 impl From<RtcTime> for chrono::NaiveDateTime {
     fn from(rtc: RtcTime) -> chrono::NaiveDateTime {
         let d = chrono::NaiveDate::from_ymd(
-            (rtc.tm_year + 1900) as i32,
+            rtc.tm_year as i32 + YEAR_EPOCH,
             (rtc.tm_mon + 1) as u32,
             (rtc.tm_mday + 1) as u32,
         );
         let t =
             chrono::NaiveTime::from_hms(rtc.tm_hour as u32, rtc.tm_min as u32, rtc.tm_sec as u32);
         chrono::NaiveDateTime::new(d, t)
+    }
+}
+
+impl From<chrono::NaiveDateTime> for RtcTime {
+    fn from(ct: chrono::NaiveDateTime) -> RtcTime {
+        RtcTime {
+            tm_sec: ct.time().second() as i32,
+            tm_min: ct.time().minute() as i32,
+            tm_hour: ct.time().hour() as i32,
+            tm_mday: ct.date().day0() as i32,
+            tm_mon: ct.date().month0() as i32,
+            tm_year: ct.date().year() - YEAR_EPOCH,
+
+            ..RtcTime::default()
+        }
     }
 }
 
