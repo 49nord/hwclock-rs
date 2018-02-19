@@ -47,9 +47,13 @@ use std::os::unix::io::AsRawFd;
 /// marks the year 2018).
 pub const YEAR_EPOCH: i32 = 1900;
 
-// ioctls, stolen from linux/rtc.h
-ioctl!(read rtc_rd_time with 'p', 0x09; RtcTime);
-ioctl!(write_ptr rtc_set_time with 'p', 0x0a; RtcTime);
+mod ffi {
+    use super::RtcTime;
+
+    // ioctls, stolen from linux/rtc.h
+    ioctl!(read rtc_rd_time with 'p', 0x09; RtcTime);
+    ioctl!(write_ptr rtc_set_time with 'p', 0x0a; RtcTime);
+}
 
 /// Linux `struct rtc_time`
 ///
@@ -177,7 +181,7 @@ impl HwClockDev {
         let mut time = RtcTime::default();
 
         assert_eq!(0, unsafe {
-            rtc_rd_time(self.clk.as_raw_fd(), &mut time as *mut RtcTime)
+            ffi::rtc_rd_time(self.clk.as_raw_fd(), &mut time as *mut RtcTime)
         }?);
 
         Ok(time)
@@ -185,7 +189,7 @@ impl HwClockDev {
 
     pub fn set_time(&self, time: &RtcTime) -> Result<(), nix::Error> {
         assert_eq!(0, unsafe {
-            rtc_set_time(self.clk.as_raw_fd(), time as *const RtcTime)
+            ffi::rtc_set_time(self.clk.as_raw_fd(), time as *const RtcTime)
         }?);
 
         Ok(())
