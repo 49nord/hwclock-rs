@@ -26,7 +26,7 @@ ioctl!(write_ptr rtc_set_time with 'p', 0x0a; RtcTime);
 ///
 /// Note that the resolution of the time struct is only seconds.
 ///
-/// Conversion from and to `chrono::NaiveDateTime` is supported, Any resolution
+/// Conversion from and to `chrono::NaiveDateTime` is supported, any resolution
 /// beyond seconds will silently be discarded without rounding.
 #[repr(C)]
 #[derive(Debug, Copy, Clone, Default, Eq, PartialEq)]
