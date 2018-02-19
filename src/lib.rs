@@ -59,7 +59,7 @@ mod ffi {
     ioctl!(write_ptr rtc_set_time with 'p', 0x0a; RtcTime);
 }
 
-/// Linux `struct rtc_time`
+/// Linux `struct rtc_time` wrapper
 ///
 /// This structure is slightly shorter than other commonly used `struct tm*`.
 /// It is assumed that the Rtc is kept at UTC.
@@ -167,6 +167,9 @@ mod tests {
     }
 }
 
+/// Hardware clock
+///
+/// Wraps an open hardware clock, usually found at `/dev/rtc` or `/dev/rtc0`.
 #[derive(Debug)]
 pub struct HwClockDev {
     // we store a full file instead of the raw fd, allowing us to print the
@@ -175,12 +178,16 @@ pub struct HwClockDev {
 }
 
 impl HwClockDev {
+    /// Open clock
+    ///
+    /// The device node will be held open until the `HwClockDev` is dropped
     pub fn open<P: AsRef<path::Path>>(dev: P) -> io::Result<HwClockDev> {
         Ok(HwClockDev {
             clk: fs::File::open(dev)?,
         })
     }
 
+    /// Get hardware clocks time
     pub fn get_time(&self) -> Result<RtcTime, nix::Error> {
         let mut time = RtcTime::default();
 
@@ -191,6 +198,7 @@ impl HwClockDev {
         Ok(time)
     }
 
+    /// Set hardware clocks time
     pub fn set_time(&self, time: &RtcTime) -> Result<(), nix::Error> {
         assert_eq!(0, unsafe {
             ffi::rtc_set_time(self.clk.as_raw_fd(), time as *const RtcTime)
