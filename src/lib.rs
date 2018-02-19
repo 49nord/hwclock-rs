@@ -1,5 +1,9 @@
 //! Hardware clock handling for linux
 //!
+//! The `hwclock` module provides a thin wrapper around kernel structs and
+//! ioctls to retrieve the current time from the hardware clock and convert it
+//! from and to a valid `chrono` data structure.
+//!
 //! ```rust,no_run
 //! extern crate chrono;
 //! extern crate hwclock;
