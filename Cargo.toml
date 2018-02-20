@@ -2,6 +2,9 @@
 authors = ["49nord GmbH <hello@49nord.de>"]
 name = "hwclock"
 version = "0.2.0"
+repository = "https://github.com/49nord/hwclock-rs"
+license = "MIT"
+documentation = "https://docs.rs/hwclock"
 
 [dependencies]
 chrono = "0.4.0"
