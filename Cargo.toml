@@ -1,5 +1,5 @@
 [package]
-authors = ["Marc Brinkmann <marc@49nord.de>"]
+authors = ["49nord GmbH <hello@49nord.de>"]
 name = "hwclock"
 version = "0.2.0"
 
