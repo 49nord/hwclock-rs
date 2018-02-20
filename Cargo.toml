@@ -5,6 +5,7 @@ version = "0.2.0"
 repository = "https://github.com/49nord/hwclock-rs"
 license = "MIT"
 documentation = "https://docs.rs/hwclock"
+description = "Manages the Linux hardware clock through ioctls"
 
 [dependencies]
 chrono = "0.4.0"
