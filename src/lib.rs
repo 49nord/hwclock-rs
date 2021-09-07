@@ -55,8 +55,9 @@ mod ffi {
     use super::RtcTime;
 
     // ioctls, stolen from linux/rtc.h
-    ioctl!(read rtc_rd_time with 'p', 0x09; RtcTime);
-    ioctl!(write_ptr rtc_set_time with 'p', 0x0a; RtcTime);
+    const RTC_IOC_MAGIC: u8 = b'p';
+    ioctl_read!(rtc_rd_time, RTC_IOC_MAGIC, 0x09, RtcTime);
+    ioctl_write_ptr!(rtc_set_time, RTC_IOC_MAGIC, 0x0a, RtcTime);
 }
 
 /// Linux `struct rtc_time` wrapper
